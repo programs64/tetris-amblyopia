@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dichoptic Drop</title>
+  <meta name="description" content="A falling-block puzzle game with fully customizable piece colors, made for dichoptic (anaglyph glasses) amblyopia / lazy eye practice.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Dichoptic Drop</h1>
+      <span class="tagline">falling-block puzzle for lazy eye practice</span>
+    </div>
+    <div class="top-actions">
+      <button id="themeToggle" type="button" class="btn" aria-pressed="true"></button>
+      <button id="settingsBtn" type="button" class="btn">Settings</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="side side-left">
+      <section class="box">
+        <h2>Hold</h2>
+        <canvas id="holdCanvas" class="preview"></canvas>
+      </section>
+      <section class="box stats">
+        <dl>
+          <dt>Score</dt><dd id="statScore">0</dd>
+          <dt>Best</dt><dd id="statBest">0</dd>
+          <dt>Level</dt><dd id="statLevel">1</dd>
+          <dt>Lines</dt><dd id="statLines">0</dd>
+          <dt>Time</dt><dd id="statTime">0:00</dd>
+        </dl>
+      </section>
+    </aside>
+
+    <div class="board-wrap" id="boardWrap">
+      <canvas id="board"></canvas>
+      <div id="actionText" class="action-text" aria-live="polite"></div>
+      <div id="overlay" class="overlay">
+        <div class="overlay-card">
+          <h2 id="overlayTitle">Dichoptic Drop</h2>
+          <p id="overlayText">Press <kbd>Enter</kbd> or click Start to play.</p>
+          <div class="overlay-buttons">
+            <button id="overlayPrimary" type="button" class="btn btn-primary">Start</button>
+            <button id="overlaySecondary" type="button" class="btn" hidden>Restart</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side side-right">
+      <section class="box">
+        <h2>Next</h2>
+        <canvas id="nextCanvas" class="preview"></canvas>
+      </section>
+      <section class="box keys-help">
+        <h2>Controls</h2>
+        <ul id="keysHelp"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <dialog id="settingsDialog" class="settings">
+    <form method="dialog" class="settings-inner" id="settingsForm">
+      <div class="settings-head">
+        <h2>Settings</h2>
+        <button type="submit" class="btn" value="close">Done</button>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab active" data-tab="colors" role="tab">Colors</button>
+        <button type="button" class="tab" data-tab="controls" role="tab">Controls</button>
+        <button type="button" class="tab" data-tab="gameplay" role="tab">Gameplay</button>
+      </div>
+
+      <section class="tab-panel" data-panel="colors">
+        <h3>Blocks</h3>
+        <div class="color-row" data-key="fallingColor">
+          <label for="fallingColorHex">Falling piece</label>
+          <input type="color" aria-label="Falling piece color picker">
+          <input type="text" id="fallingColorHex" class="hex" spellcheck="false" maxlength="7">
+        </div>
+        <div class="color-row" data-key="lockedColor">
+          <label for="lockedColorHex">Fallen blocks</label>
+          <input type="color" aria-label="Fallen blocks color picker">
+          <input type="text" id="lockedColorHex" class="hex" spellcheck="false" maxlength="7">
+        </div>
+        <label class="check"><input type="checkbox" id="linkColors"> Fallen blocks use the falling piece color</label>
+        <p class="hint">Hold and next previews use the falling piece color, so they are seen by the same eye as the falling piece.</p>
+        <div class="presets">
+          <span>Presets:</span>
+          <button type="button" class="btn btn-small" data-preset="#ff0000,#00ffff">Red / Cyan</button>
+          <button type="button" class="btn btn-small" data-preset="#ff0000,#0000ff">Red / Blue</button>
+          <button type="button" class="btn btn-small" data-preset="#ff0000,#00ff00">Red / Green</button>
+          <button type="button" class="btn btn-small" id="swapColors">Swap colors</button>
+        </div>
+
+        <h3>Backgrounds</h3>
+        <div class="color-row" data-key="gameBg">
+          <label for="gameBgHex">Game background</label>
+          <input type="color" aria-label="Game background color picker">
+          <input type="text" id="gameBgHex" class="hex" spellcheck="false" maxlength="7">
+        </div>
+        <div class="color-row" data-key="pageBgDark">
+          <label for="pageBgDarkHex">Website background (dark mode)</label>
+          <input type="color" aria-label="Website background, dark mode, color picker">
+          <input type="text" id="pageBgDarkHex" class="hex" spellcheck="false" maxlength="7">
+        </div>
+        <div class="color-row" data-key="pageBgLight">
+          <label for="pageBgLightHex">Website background (light mode)</label>
+          <input type="color" aria-label="Website background, light mode, color picker">
+          <input type="text" id="pageBgLightHex" class="hex" spellcheck="false" maxlength="7">
+        </div>
+        <p class="hint">The dark/light toggle at the top only switches the website background between these two colors.</p>
+        <button type="button" class="btn btn-small" id="resetColors">Reset colors to defaults</button>
+      </section>
+
+      <section class="tab-panel" data-panel="controls" hidden>
+        <p class="hint">Click a key slot, then press the key you want. Click the slot again to cancel, or × to clear it. A key can only belong to one action.</p>
+        <table class="bindings">
+          <thead><tr><th>Action</th><th>Key</th><th>Alternate</th></tr></thead>
+          <tbody id="bindingsBody"></tbody>
+        </table>
+        <button type="button" class="btn btn-small" id="resetKeys">Reset keys to defaults</button>
+      </section>
+
+      <section class="tab-panel" data-panel="gameplay" hidden>
+        <div class="num-row">
+          <label for="startLevel">Starting level</label>
+          <input type="number" id="startLevel" min="1" max="20" step="1">
+        </div>
+        <div class="num-row">
+          <label for="das">Auto-repeat delay (DAS, ms)</label>
+          <input type="number" id="das" min="0" max="500" step="1">
+        </div>
+        <div class="num-row">
+          <label for="arr">Auto-repeat rate (ARR, ms, 0 = instant)</label>
+          <input type="number" id="arr" min="0" max="200" step="1">
+        </div>
+        <div class="num-row">
+          <label for="sdf">Soft drop speed (× gravity, 41 = instant)</label>
+          <input type="number" id="sdf" min="1" max="41" step="1">
+        </div>
+        <div class="num-row">
+          <label for="nextCount">Next pieces shown</label>
+          <input type="number" id="nextCount" min="0" max="6" step="1">
+        </div>
+        <label class="check"><input type="checkbox" id="ghost"> Show ghost piece (landing preview)</label>
+        <label class="check"><input type="checkbox" id="grid"> Show grid lines</label>
+        <p class="hint">Changing the starting level applies to the next game.</p>
+      </section>
+    </form>
+  </dialog>
+
+  <script src="js/engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
