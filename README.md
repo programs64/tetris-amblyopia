@@ -1,3 +1,6 @@
+Completely made by claude, and I am very suprised by how well it turned out. Made to try and help with fixing a lazy eye, all you need are some blue-red glasses (or some other color). Adjust the colors until your glasses cancel them out, and then play. There is also a link to this on my website: https://ritchan.moe/tetris-amblyopia
+
+
 # Dichoptic Drop
 
 A browser-based falling-block puzzle game for **amblyopia (lazy eye) practice**
